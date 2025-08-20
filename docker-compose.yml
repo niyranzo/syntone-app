@@ -1,0 +1,86 @@
+  version: '3.8'
+
+  services:
+    backend:
+      build: ./backend
+      container_name: syntone_backend
+      ports:
+        - "3000:3000"
+      volumes:
+        - ./backend:/usr/src/app
+      working_dir: /usr/src/app
+      environment:
+        - DB_HOST=postgres
+        - DB_PORT=5432
+        - DB_NAME=syntone_db
+        - DB_USER=admin
+        - DB_PASSWORD=admin
+        - JWT_SECRET=syntone_secret
+      networks:
+        - app_network
+      depends_on:
+        postgres:
+          condition: service_healthy
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+
+    frontend:
+      build:
+        context: ./frontend
+        dockerfile: Dockerfile
+      container_name: syntone_frontend
+      ports:
+        - "5173:5173"
+      volumes:
+        - ./frontend:/app
+        - /app/node_modules
+      environment:
+        - VITE_API_URL=http://localhost:3000/api/
+        - CHOKIDAR_USEPOLLING=true
+      networks:
+        - app_network
+      depends_on:
+        backend:
+          condition: service_healthy
+      stdin_open: true
+      tty: true
+
+    postgres:
+      image: postgres:latest
+      container_name: syntone_postgres
+      environment:
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: admin
+        POSTGRES_DB: syntone_db
+      networks:
+        - app_network
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U admin -d syntone_db"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+    pgweb:
+      image: sosedoff/pgweb
+      container_name: syntone_pgweb
+      ports:
+        - "8080:8081"
+      environment:
+        - PGWEB_DB=postgres://admin:admin@postgres:5432/syntone_db?sslmode=disable
+      networks:
+        - app_network
+      depends_on:
+        postgres:
+          condition: service_healthy
+
+  volumes:
+    postgres_data:
+
+  networks:
+    app_network:
+      driver: bridge

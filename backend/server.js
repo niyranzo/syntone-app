@@ -1,7 +1,6 @@
 import app from './src/app.js';
 import { sequelize, models } from './src/models/index.js';
 import { testConnection } from './src/config/db.js';
-import { createAdminUser } from './src/helpers/admin.js';
 import { loadDefaultGenres } from './src/helpers/loadDefaultGenres.js';
 
 const startServer = async () => {

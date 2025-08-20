@@ -1,10 +1,6 @@
 import { Router } from 'express';
-import {
-  followUser,
-  unfollowUser,
-  getFollowers,
-  getFollowing
-} from '../controllers/followController.js';
+import { followUser, getFollowers, getFollowing, unfollowUser } from '../controllers/followController.js';
+
 
 const router = Router();
 
